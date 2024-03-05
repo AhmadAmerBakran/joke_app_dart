@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:make_me_laugh/pages/settings_page.dart';
 import 'package:provider/provider.dart';
 
 import 'data_source.dart';
 import 'joke_dto.dart';
+import 'models/settings_model.dart';
 
 void main() {
   runApp(const MyApp());
@@ -14,11 +16,14 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Provider(
-      create: (context) => DataSource(),
+    // Initialize JokeSettings with default values or from saved preferences
+    final jokeSettings = JokeSettings(); // Add default values as needed
+
+    return Provider<DataSource>(
+      create: (context) => DataSource(settings: jokeSettings),
       child: MaterialApp(
         title: 'Joke App',
-        home: JokePage(),
+        home: JokePage(jokeSettings: jokeSettings),
       ),
     );
   }
@@ -26,7 +31,9 @@ class MyApp extends StatelessWidget {
 
 
 class JokePage extends StatefulWidget {
-  const JokePage({super.key});
+  final JokeSettings jokeSettings;
+
+  const JokePage({super.key, required this.jokeSettings});
 
   @override
   State<JokePage> createState() => _JokePageState();
@@ -42,19 +49,40 @@ class _JokePageState extends State<JokePage> {
   }
 
   _loadJoke() async {
-    setState(() {
-      joke = null;
-    });
     final newJoke = await context.read<DataSource>().getJoke();
     setState(() {
       joke = newJoke;
     });
   }
+  void _navigateToSettings() async {
+    final updatedSettings = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => SettingsPage(settings: widget.jokeSettings),
+      ),
+    );
+
+    if (updatedSettings != null) {
+      setState(() {
+        widget.jokeSettings.categories = updatedSettings.categories;
+        widget.jokeSettings.blacklistFlags = updatedSettings.blacklistFlags;
+      });
+      _loadJoke(); // Reload jokes with new settings
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Jokes")),
+      appBar: AppBar(
+        title: const Text("Jokes"),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.settings),
+            onPressed: () => _navigateToSettings(),
+          ),
+        ],
+      ),
       body: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.center,

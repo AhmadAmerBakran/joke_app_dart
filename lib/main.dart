@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:flutter_tts/flutter_tts.dart';
 import 'package:make_me_laugh/pages/settings_page.dart';
 import 'package:provider/provider.dart';
 
@@ -47,7 +48,7 @@ class MyApp extends StatelessWidget {
 class JokePage extends StatefulWidget {
   final JokeSettings jokeSettings;
 
-  const JokePage({super.key, required this.jokeSettings});
+  const JokePage({Key? key, required this.jokeSettings}) : super(key: key);
 
   @override
   State<JokePage> createState() => _JokePageState();
@@ -55,11 +56,58 @@ class JokePage extends StatefulWidget {
 
 class _JokePageState extends State<JokePage> {
   JokeDto? joke;
+  final FlutterTts flutterTts = FlutterTts();
 
   @override
   void initState() {
     super.initState();
     _loadJoke();
+    _initializeTts();
+  }
+
+  void _initializeTts() {
+    flutterTts.setStartHandler(() {
+      setState(() {
+        print("Playing");
+      });
+    });
+    flutterTts.setCompletionHandler(() {
+      setState(() {
+        print("Complete");
+      });
+    });
+    flutterTts.setErrorHandler((msg) {
+      setState(() {
+        print("error: $msg");
+      });
+    });
+
+    flutterTts.setLanguage("en-US");
+  }
+
+  Future<void> _speak() async {
+    String textToSpeak = '';
+
+    // Check if it's a Q&A type joke (has setup and delivery)
+    if (joke?.setup != null && joke?.delivery != null) {
+      textToSpeak = "${joke!.setup} ... ${joke!.delivery}";
+    }
+    // If it's a single part joke
+    else if (joke?.joke != null) {
+      textToSpeak = joke!.joke!;
+    }
+
+    if (textToSpeak.isNotEmpty) {
+      await flutterTts.speak(textToSpeak);
+    }
+  }
+
+  Future<void> _pause() async {
+    await flutterTts.pause();
+  }
+
+  Future<void> _stop() async {
+    await flutterTts.stop();
   }
 
   _loadJoke() async {
@@ -116,24 +164,41 @@ class _JokePageState extends State<JokePage> {
                 width: 150,
                 height: 150,
               ),
+            if (joke?.joke != null) ChatBubble(text: joke!.joke!),
+            if (joke?.setup != null) ChatBubble(text: joke!.setup!),
+            if (joke?.delivery != null) ChatBubble(text: joke!.delivery!),
             if (joke == null)
               const CircularProgressIndicator(),
-            if (joke?.joke != null)
-              ChatBubble(text: joke!.joke!),
-            if (joke?.setup != null)
-              ChatBubble(text: joke!.setup!),
-            if (joke?.delivery != null)
-              ChatBubble(text: joke!.delivery!),
+            if (joke?.joke != null || joke?.setup != null || joke?.delivery != null)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8.0),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    ElevatedButton(
+                      onPressed: _speak,
+                      child: Text('Speak'),
+                    ),
+                    SizedBox(width: 8),
+                    ElevatedButton(
+                      onPressed: _pause,
+                      child: Text('Pause'),
+                    ),
+                    SizedBox(width: 8),
+                    ElevatedButton(
+                      onPressed: _stop,
+                      child: Text('Stop'),
+                    ),
+                  ],
+                ),
+              ),
           ],
         ),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: _loadJoke,
         child: Icon(Icons.refresh),
-        backgroundColor: Theme
-            .of(context)
-            .colorScheme
-            .secondary,
+        backgroundColor: Theme.of(context).colorScheme.secondary,
       ),
     );
   }

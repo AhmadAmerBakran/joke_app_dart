@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../main.dart';
 import '../models/settings_model.dart';
 
 class SettingsPage extends StatefulWidget {
@@ -30,6 +31,21 @@ class _SettingsPageState extends State<SettingsPage> {
     selectedFlags = widget.settings.blacklistFlags;
   }
 
+  void _handleCategoryChange(bool? value, String category) {
+    setState(() {
+      if (category == 'Any' && value == true) {
+        selectedCategories = ['Any']; // Select only "Any" and remove all others
+      } else {
+        if (value == true) {
+          selectedCategories.remove('Any'); // Remove "Any" if other categories are selected
+          selectedCategories.add(category);
+        } else {
+          selectedCategories.remove(category);
+        }
+      }
+    });
+  }
+
   Widget buildCheckboxListTiles(List<String> options, List<String> selectedOptions, void Function(bool?, String) onChanged) {
     return Column(
       children: options.map((option) => CheckboxListTile(
@@ -45,18 +61,14 @@ class _SettingsPageState extends State<SettingsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Settings')),
+      appBar: AppBar(title: const Text('Welcome! Please select your preferences.')),
       body: SingleChildScrollView(
         child: Column(
           children: [
             ExpansionTile(
               title: const Text('Select Categories'),
               children: [
-                buildCheckboxListTiles(availableCategories, selectedCategories, (bool? value, String category) {
-                  setState(() {
-                    value == true ? selectedCategories.add(category) : selectedCategories.remove(category);
-                  });
-                }),
+                buildCheckboxListTiles(availableCategories, selectedCategories, _handleCategoryChange),
               ],
             ),
             ExpansionTile(
@@ -73,7 +85,8 @@ class _SettingsPageState extends State<SettingsPage> {
               onPressed: () {
                 widget.settings.categories = selectedCategories;
                 widget.settings.blacklistFlags = selectedFlags;
-                Navigator.pop(context, widget.settings); // Return updated settings
+                // Navigate to JokePage instead of popping back
+                Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => JokePage(jokeSettings: widget.settings)));
               },
               child: const Text('Save'),
             ),

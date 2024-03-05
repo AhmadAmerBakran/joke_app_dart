@@ -16,14 +16,13 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Initialize JokeSettings with default values or from saved preferences
-    final jokeSettings = JokeSettings(); // Add default values as needed
+    final jokeSettings = JokeSettings();
 
     return Provider<DataSource>(
       create: (context) => DataSource(settings: jokeSettings),
       child: MaterialApp(
         title: 'Joke App',
-        home: JokePage(jokeSettings: jokeSettings),
+        home: SettingsPage(settings: jokeSettings),
       ),
     );
   }
@@ -67,7 +66,7 @@ class _JokePageState extends State<JokePage> {
         widget.jokeSettings.categories = updatedSettings.categories;
         widget.jokeSettings.blacklistFlags = updatedSettings.blacklistFlags;
       });
-      _loadJoke(); // Reload jokes with new settings
+      _loadJoke();
     }
   }
 

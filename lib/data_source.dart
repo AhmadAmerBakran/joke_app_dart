@@ -15,6 +15,8 @@ class DataSource {
     String flags = settings.blacklistFlagsAsString;
     String url = "$baseUrl$categories${flags.isNotEmpty ? '?$flags' : ''}";
 
+    print("Fetching joke from URL: $url");
+
     final response = await http.get(Uri.parse(url));
     final map = json.decode(response.body);
     return JokeDto.fromJson(map);

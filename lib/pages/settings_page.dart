@@ -34,10 +34,10 @@ class _SettingsPageState extends State<SettingsPage> {
   void _handleCategoryChange(bool? value, String category) {
     setState(() {
       if (category == 'Any' && value == true) {
-        selectedCategories = ['Any']; // Select only "Any" and remove all others
+        selectedCategories = ['Any'];
       } else {
         if (value == true) {
-          selectedCategories.remove('Any'); // Remove "Any" if other categories are selected
+          selectedCategories.remove('Any');
           selectedCategories.add(category);
         } else {
           selectedCategories.remove(category);
@@ -61,7 +61,10 @@ class _SettingsPageState extends State<SettingsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Welcome! Please select your preferences.')),
+      backgroundColor: Colors.grey[100],
+      appBar: AppBar(title: const Text('Welcome! Please select your preferences.'),
+        backgroundColor: Theme.of(context).primaryColor,
+      ),
       body: SingleChildScrollView(
         child: Column(
           children: [
@@ -88,7 +91,11 @@ class _SettingsPageState extends State<SettingsPage> {
                 // Navigate to JokePage instead of popping back
                 Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => JokePage(jokeSettings: widget.settings)));
               },
-              child: const Text('Save'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Theme.of(context).colorScheme.secondary,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              ),
+              child: Text('Save'),
             ),
           ],
         ),

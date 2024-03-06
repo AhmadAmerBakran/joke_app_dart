@@ -55,6 +55,10 @@ class JokePage extends StatefulWidget {
 }
 
 class _JokePageState extends State<JokePage> {
+  int _sliderValue = 5;
+  double _speechRate = 0.5;
+  List<Map<String, dynamic>> _voices = [];
+  String? _selectedVoice;
   JokeDto? joke;
   final FlutterTts flutterTts = FlutterTts();
 
@@ -63,7 +67,19 @@ class _JokePageState extends State<JokePage> {
     super.initState();
     _loadJoke();
     _initializeTts();
+    _initVoices();
   }
+
+  void _initVoices() async {
+    var voices = await flutterTts.getVoices;
+    setState(() {
+      _voices = voices.map<Map<String, dynamic>>((voice) => Map<String, dynamic>.from(voice)).toList();
+      if (_voices.isNotEmpty) {
+        _selectedVoice = _voices.first['name'];
+      }
+    });
+  }
+
 
   void _initializeTts() {
     flutterTts.setStartHandler(() {
@@ -88,11 +104,9 @@ class _JokePageState extends State<JokePage> {
   Future<void> _speak() async {
     String textToSpeak = '';
 
-    // Check if it's a Q&A type joke (has setup and delivery)
     if (joke?.setup != null && joke?.delivery != null) {
       textToSpeak = "${joke!.setup} ... ${joke!.delivery}";
     }
-    // If it's a single part joke
     else if (joke?.joke != null) {
       textToSpeak = joke!.joke!;
     }
@@ -192,6 +206,37 @@ class _JokePageState extends State<JokePage> {
                   ],
                 ),
               ),
+            Slider(
+              value: _sliderValue.toDouble(),
+              onChanged: (newValue) {
+                setState(() {
+                  _sliderValue = newValue.round();
+                  double speechRate = _sliderValue / 10;
+                  flutterTts.setSpeechRate(speechRate);
+                });
+              },
+              min: 1,
+              max: 10,
+              divisions: 9,
+              label: "$_sliderValue",
+            ),
+            DropdownButton<String>(
+              value: _selectedVoice,
+              onChanged: (String? newValue) {
+                if (newValue != null) {
+                  setState(() {
+                    _selectedVoice = newValue;
+                    flutterTts.setVoice({"name": newValue, "locale": _voices.firstWhere((voice) => voice['name'] == newValue)['locale']});
+                  });
+                }
+              },
+              items: _voices.map<DropdownMenuItem<String>>((Map<String, dynamic> voice) {
+                return DropdownMenuItem<String>(
+                  value: voice['name'],
+                  child: Text(voice['name']),
+                );
+              }).toList(),
+            ),
           ],
         ),
       ),
